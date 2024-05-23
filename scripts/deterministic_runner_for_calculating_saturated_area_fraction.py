@@ -71,9 +71,60 @@ class DeterministicRunner(DynamicModel):
         
     def initial(self): 
         
+        # read soil parameters from the netCDF file:
+        soil_input_file = 
+        soilParameters = ['resVolWC1','resVolWC2',            
+                          'satVolWC1','satVolWC2']
+        for var in soilParameters:
+            input = optionDict[str(var)]
+            vars(self)[var] = \
+                           vos.readPCRmapClone(soil_input_file, self.cloneMap, self.tmpDir, self.inputDir)
+            vars(self)[var] = pcr.scalar(vars(self)[var])
         
-        # read cell area (m2)
-        self.cell_area 
+
+        # WMAX = SC1 + SC2 (unit; m)
+        self.thickUpp   = 0.3
+        self.thickLow   = 1.2
+        self.storCapUpp = self.thickUpp * \
+                         (self.satVolWC1 - self.resVolWC1)
+        self.storCapLow = self.thickLow * \
+                         (self.satVolWC2 - self.resVolWC2)
+        self.rootZoneWaterStorageCap = self.storCapUpp + self.storCapLow                      # This is called as WMAX in the original pcrcalc script. 
+
+
+        # orographyBeta
+        orographyBeta = 
+        
+        
+        coverTypes = ["forest", "grassland", "irrPaddy", "irrNonPaddy"]
+        
+        # read land cover parameters
+        land_cover_fraction = {}
+        minSoilDepthFrac = {}
+        maxSoilDepthFrac = {}
+        for coverType in coverTypes:
+            
+            # read land cover fractions
+            land_cover_fraction[coverType] = 
+            
+            # read land cover parameters
+            minSoilDepthFrac[coverType] =  
+            maxSoilDepthFrac[coverType] = 
+            
+        # calculate tha aggregate land cover parameters
+        minSoilDepthFrac_avg = pcr.scalar(0.0)
+        maxSoilDepthFrac_avg = pcr.scalar(0.0)
+        for coverType in coverTypes:
+            minSoilDepthFrac_avg = minSoilDepthFrac_avg + minSoilDepthFrac[coverType] * land_cover_fraction[coverType]
+            maxSoilDepthFrac_avg = maxSoilDepthFrac_avg + maxSoilDepthFrac[coverType] * land_cover_fraction[coverType]
+            
+        # arnoBeta
+        self.arnoBeta = pcr.max(0.001,\
+                 (maxSoilDepthFrac_avg-1.)/(1.-minSoilDepthFrac_avg)+\
+                                           orographyBeta-0.01)                # Rens's line: BCF[TYPE]= max(0.001,(MAXFRAC[TYPE]-1)/(1-MINFRAC[TYPE])+B_ORO-0.01)
+
+        # WMIN (unit: m): minimum local soil water capacity within the grid-cell
+        self.rootZoneWaterStorageMin = minSoilDepthFrac_avg * self.rootZoneWaterStorageCap
 
     def dynamic(self):
 
@@ -102,7 +153,7 @@ class DeterministicRunner(DynamicModel):
             
             # calculate saturated area fraction
             saturated_area_fraction = 1.00 - \
-             ((self.w_max - monthly_total_soil_storage) / (self.w_max - self.w_min))**(self.arno_beta/(self.arno_beta+1))
+             ((self.rootZoneWaterStorageCap - monthly_total_soil_storage) / (self.rootZoneWaterStorageCap - self.rootZoneWaterStorageMin))**(self.arnoBeta/(self.arnoBeta+1))
             
             
             # TODO: UNTIL THIS PART. We have to put all "self" things in the "initial" part.
