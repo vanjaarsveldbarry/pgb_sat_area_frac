@@ -26,8 +26,6 @@ class DeterministicRunner(DynamicModel):
     def __init__(self, modelTime, model_setup):
         DynamicModel.__init__(self)
 
-        # ~ Please also check the previous script: https://github.com/edwinkost/estimate_discharge_from_local_runoff/blob/develop/python_estimate_flow/estimate_discharge_from_local_runoff.py
-
         # initiate model time
         self.modelTime = modelTime        
 
@@ -72,13 +70,13 @@ class DeterministicRunner(DynamicModel):
     def initial(self): 
         
         # read soil parameters from the netCDF file:
-        soil_input_file = 
-        soilParameters = ['resVolWC1','resVolWC2',            
-                          'satVolWC1','satVolWC2']
+        soilParameters = ['resVolWC1',\           
+                          'resVolWC2',\
+                          'satVolWC1',\
+                          'satVolWC2']
         for var in soilParameters:
-            input = optionDict[str(var)]
-            vars(self)[var] = \
-                           vos.readPCRmapClone(soil_input_file, self.cloneMap, self.tmpDir, self.inputDir)
+            soil_input_file = self.model_setup[var]
+            vars(self)[var] = vos.readPCRmapClone(soil_input_file, self.cloneMap, self.tmpDir, self.inputDir)
             vars(self)[var] = pcr.scalar(vars(self)[var])
         
 
@@ -91,13 +89,60 @@ class DeterministicRunner(DynamicModel):
                          (self.satVolWC2 - self.resVolWC2)
         self.rootZoneWaterStorageCap = self.storCapUpp + self.storCapLow                      # This is called as WMAX in the original pcrcalc script. 
 
-
         # orographyBeta
-        orographyBeta = 
+        self.orographyBeta = vos.netcdf2PCRobjCloneWithoutTime(ncFile  = self.model_setup['topo_nc_file'],\ 
+                                                               varName = "orographyBeta",\ 
+                                                               cloneMapFileName  = self.cloneMap,\
+                                                               LatitudeLongitude = True,\
+                                                               specificFillValue = None,\
+                                                               absolutePath = None)
         
+        # land cover types
+        self.coverTypes = ["forest", "grassland", "irrPaddy", "irrNonPaddy"]
+
         
-        coverTypes = ["forest", "grassland", "irrPaddy", "irrNonPaddy"]
+        # irrTypeFracOverIrr = fraction each land cover type (paddy or nonPaddy) over the irrigation area (dimensionless) ; this value is constant for the entire simulation of the Aqueduct run
+        self.irrTypeFracOverIrr
+
         
+
+    def dynamic(self):
+
+        # read the area/extent of irrigated lands
+        self.dynamicIrrigationAreaFile = self.model_setup[" "]
+        if self.dynamicIrrigationAreaFile.endswith(('.nc4','.nc')):
+            fulldateInString = yearInString+"-01"+"-01"   
+            self.irrigationArea = 10000. * pcr.cover(\
+                 vos.netcdf2PCRobjClone(self.dynamicIrrigationAreaFile,\
+                                            'irrigationArea',\
+                     fulldateInString, useDoy = 'yearly',\
+                             cloneMapFileName = self.cloneMap), 0.0)        # unit: m2 (input file is in hectare)
+        
+        # area of irrigation is limited by cellArea
+        self.irrigationArea = pcr.max(self.irrigationArea, 0.0)              
+        self.irrigationArea = pcr.min(self.irrigationArea, self.cell_area)  # limited by cellArea
+
+        # calculate fracVegCover (for irrigation only)
+        for coverType in self.coverTypes:
+            if coverType.startswith('irr'):
+
+                self.landCoverObj[coverType].fractionArea = 0.0    # reset 
+                self.landCoverObj[coverType].fractionArea = self.landCoverObj[coverType].irrTypeFracOverIrr * self.irrigationArea # unit: m2
+                self.landCoverObj[coverType].fracVegCover = pcr.min(1.0, self.landCoverObj[coverType].fractionArea/ self.cellArea) 
+
+                # avoid small values
+                self.landCoverObj[coverType].fracVegCover = pcr.rounddown(self.landCoverObj[coverType].fracVegCover * 1000.)/1000.
+
+        # rescale land cover fractions (for all land cover types):
+        self.scaleModifiedLandCoverFractions()
+
+
+        irrigationArea
+        
+        # read land cover parameters
+        land_cover_fraction = {}
+
+
         # read land cover parameters
         land_cover_fraction = {}
         minSoilDepthFrac = {}
@@ -126,7 +171,6 @@ class DeterministicRunner(DynamicModel):
         # WMIN (unit: m): minimum local soil water capacity within the grid-cell
         self.rootZoneWaterStorageMin = minSoilDepthFrac_avg * self.rootZoneWaterStorageCap
 
-    def dynamic(self):
 
         # re-calculate current model time using current pcraster timestep value
         self.modelTime.update(self.currentTimeStep())
@@ -138,12 +182,12 @@ class DeterministicRunner(DynamicModel):
             logger.info(" \n\n Calculating for time %s \n\n", self.modelTime.currTime)
 
             # read monthly S1 and S2 (m)
-            monthly_storUpp    = vos.netcdf2PCRobjClone(self.model_setup["monthly_runoff_file"], \
+            monthly_storUpp    = vos.netcdf2PCRobjClone(self.model_setup["monthly_s1_file"], \
                                                                    "total_runoff", \
                                                                    str(self.modelTime.fulldate), \
                                                                    None, \
                                                                    self.clone)
-            monthly_storLow    = vos.netcdf2PCRobjClone(self.model_setup["monthly_runoff_file"], \
+            monthly_storLow    = vos.netcdf2PCRobjClone(self.model_setup["monthly_s2_file"], \
                                                                    "total_runoff", \
                                                                    str(self.modelTime.fulldate), \
                                                                    None, \
@@ -175,34 +219,45 @@ def main():
 
     model_setup = {}
 
-    # ~ model_setup["clone_file"]              = "/scratch/depfg/sutan101/data/pcrglobwb_gmglob_input/develop/global_30sec/cloneMaps/global_30sec_clone.map"
-    # ~ model_setup["ldd_file"]                = "/scratch/depfg/sutan101/data/pcrglobwb_gmglob_input/develop/global_30sec/routing/surface_water_bodies/version_2020-05-XX//lddsound_30sec_version_202005XX_correct_lat.nc"
+    model_setup["clone_file"]     = "/projects/0/dfguu/users/edwin/data/pcrglobwb_input_aqueduct/version_2021-09-16/general/lddsound_05min_version_20210330.map"
     
-    # ~ model_setup["cell_area_file"]          = "/scratch/depfg/sutan101/data/pcrglobwb_gmglob_input/develop/global_30sec/others/estimate_cell_dimension/30sec/cdo_grid_area_30sec_map_correct_lat.nc"
-
-    # ~ model_setup["lake_and_reservoir_file"] = "/scratch/depfg/sutan101/data/pcrglobwb_gmglob_input/develop/global_30sec/routing/surface_water_bodies/version_2020-05-XX/lakes_and_reservoirs_30sec_global_2019_version_202005XX.nc"
-
-    # ~ model_setup["monthly_runoff_file"] = "/scratch/depfg/sutan101/data/pcrglobwb_gmglob_input/develop/example_output/pcrglobwb/global_05min_gmd_paper_output/totalRunoff_monthTot_output_1958-01-31_to_2015-12-31.zip.nc"
+    model_setup["ldd_file"]       = "/projects/0/dfguu/users/edwin/data/pcrglobwb_input_aqueduct/version_2021-09-16/general/lddsound_05min_version_20210330.map"
     
-    # ~ model_setup["start_date"] = "1958-01-31"
-    # ~ model_setup["end_date"]   = "2015-12-31"
+    model_setup["cell_area_file"] = "/projects/0/dfguu/users/edwin/data/pcrglobwb_input_aqueduct/version_2021-09-16/general/cdo_gridarea_clone_global_05min_correct_lats.nc"
 
-    # ~ model_setup["output_dir"] = "/scratch/depfg/sutan101/discharge_30sec_gmd_paper/monthly_1958-2015_splitted/" + model_setup["start_date"] + "_to_" + model_setup["end_date"] + "/"
+    model_setup['resVolWC1']      = "/projects/0/dfguu/users/edwin/data/pcrglobwb_input_aqueduct/version_2021-09-16/general/vmcRes_average_1_global_05arcmin.nc"
+    model_setup['resVolWC2']      = "/projects/0/dfguu/users/edwin/data/pcrglobwb_input_aqueduct/version_2021-09-16/general/vmcRes_average_2_global_05arcmin.nc"
+    model_setup['satVolWC1']      = "/projects/0/dfguu/users/edwin/data/pcrglobwb_input_aqueduct/version_2021-09-16/general/vmcSat_average_1_global_05arcmin.nc"
+    model_setup['satVolWC2']      = "/projects/0/dfguu/users/edwin/data/pcrglobwb_input_aqueduct/version_2021-09-16/general/vmcSat_average_2_global_05arcmin.nc"
 
-    # ~ model_setup["discharge_output_file"] = model_setup["output_dir"] + "/" + "discharge_30sec_monthAvg_" + model_setup["start_date"] + "_to_" + model_setup["end_date"] + ".nc"
-
-
-    model_setup["clone_file"]              = "/scratch/depfg/sutan101/data/pcrglobwb_gmglob_input/develop/global_30sec/cloneMaps/global_30sec_clone.map"
-    model_setup["ldd_file"]                = "/scratch/depfg/sutan101/data/pcrglobwb_gmglob_input/develop/global_30sec/routing/surface_water_bodies/version_2020-05-XX//lddsound_30sec_version_202005XX_correct_lat.nc"
+    model_setup['topo_nc_file']   = "/projects/0/dfguu/users/edwin/data/pcrglobwb_input_aqueduct/version_2021-09-16/general/topography_parameters_5min_april_2021_global_covered_with_zero.nc"
     
-    model_setup["cell_area_file"]          = "/scratch/depfg/sutan101/data/pcrglobwb_gmglob_input/develop/global_30sec/others/estimate_cell_dimension/30sec/cdo_grid_area_30sec_map_correct_lat.nc"
+    model_setup["irrigationArea"] = "irrigated_areas_historical_1960-2019.nc" 
 
-    model_setup["lake_and_reservoir_file"] = "/scratch/depfg/sutan101/data/pcrglobwb_gmglob_input/develop/global_30sec/routing/surface_water_bodies/version_2020-05-XX/lakes_and_reservoirs_30sec_global_2019_version_202005XX.nc"
+-rw-r--r--. 1 edwin edwin 1.8G Apr  1  2022 irrigated_areas_ssp1_2000-2050.nc
+-rw-r--r--. 1 edwin edwin 1.8G Apr  1  2022 irrigated_areas_ssp3_2000-2050.nc
+-rw-r--r--. 1 edwin edwin 1.8G Apr  1  2022 irrigated_areas_ssp5_2000-2050.nc
 
-    model_setup["monthly_runoff_file"] = "/scratch/depfg/sutan101/data/pcrglobwb_gmglob_input/develop/example_output/pcrglobwb/global_05min_gmd_paper_output/totalRunoff_monthTot_output_1958-01-31_to_2015-12-31.zip.nc"
+
+
+
+ dem_minimum dem_maximum dem_average dem_standard_deviation slopeLength orographyBeta tanslope dzRel0000 dzRel0001 dzRel0005 dzRel0010 dzRel0020 dzRel0030 dzRel0040 dzRel0050 dzRel0060 dzRel0070 dzRel0080 dzRel0090 dzRel0100
+cdo    showname: Processed 20 variables [0.16s 81MB].
+
+
+
+'resVolWC1',\
+'resVolWC2',\
+'satVolWC1',\
+'satVolWC2'
+
+
+
+    model_setup["monthly_s1_file"] = "/projects/0/managed_datasets/hypflowsci6_v1.0/output/gswp3-w5e5/historical-reference/pcrglobwb_cmip6-isimip3-gswp3-w5e5_image-aqueduct_historical-reference_storUppTotal_global_monthly-average_1960_2019_basetier1.nc"
+    model_setup["monthly_s2_file"] = "/projects/0/managed_datasets/hypflowsci6_v1.0/output/gswp3-w5e5/historical-reference/pcrglobwb_cmip6-isimip3-gswp3-w5e5_image-aqueduct_historical-reference_storLowTotal_global_monthly-average_1960_2019_basetier1.nc"
     
-    model_setup["start_date"] = "1958-01-31"
-    model_setup["end_date"]   = "2015-12-31"
+    model_setup["start_date"] = "1960-01-31"
+    model_setup["end_date"]   = "2019-12-31"
 
     model_setup["output_dir"] = "/scratch/depfg/sutan101/discharge_30sec_gmd_paper/monthly_1958-2015_splitted/" + model_setup["start_date"] + "_to_" + model_setup["end_date"] + "/"
 
