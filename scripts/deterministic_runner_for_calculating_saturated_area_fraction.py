@@ -15,7 +15,7 @@ from pcraster.framework import DynamicFramework
 from currTimeStep import ModelTime
 
 import ncConverter_for_discharge_30sec as netcdf_writer
-import virtualOS as vos
+from tools import virtualOS as vos
 
 import logging
 logger = logging.getLogger(__name__)
@@ -101,8 +101,48 @@ class DeterministicRunner(DynamicModel):
         self.coverTypes = ["forest", "grassland", "irrPaddy", "irrNonPaddy"]
 
         
+        # fractions of natural land covers (forest and grassland) - this is over the entire cell area and not considering irrigated land
+        fraction_forest    = vos.readPCRmapClone(v = self.model_setup["fraction_forest"], \
+                                                      cloneMapFileName = self.clone, \
+                                                      tmpDir           = self.tmp_folder, \
+                                                      absolutePath     = None, \
+                                                      isLddMap         = False, \
+                                                      cover            = None, \
+                                                      isNomMap         = False)
+        fraction_grassland = vos.readPCRmapClone(v = self.model_setup["fraction_grassland"], \
+                                                      cloneMapFileName = self.clone, \
+                                                      tmpDir           = self.tmp_folder, \
+                                                      absolutePath     = None, \
+                                                      isLddMap         = False, \
+                                                      cover            = None, \
+                                                      isNomMap         = False)
+        # correcting
+        total_fraction_of_natural_before_correction = fraction_forest + fraction_grassland
+        self.fraction_forest    = vos.getValDivZero(fraction_forest, total_fraction_of_natural_before_correction)
+        self.fraction_grassland = pcr.max(0.0, 1.0 - self.fraction_forest)
+        
+        
         # irrTypeFracOverIrr = fraction each land cover type (paddy or nonPaddy) over the irrigation area (dimensionless) ; this value is constant for the entire simulation of the Aqueduct run
-        self.irrTypeFracOverIrr
+        fraction_paddy_over_irrigated_land     = vos.readPCRmapClone(v                = self.model_setup["fraction_paddy_over_irrigated_land"], \
+                                                                     cloneMapFileName = self.clone, \
+                                                                     tmpDir           = self.tmp_folder, \
+                                                                     absolutePath     = None, \
+                                                                     isLddMap         = False, \
+                                                                     cover            = None, \
+                                                                     isNomMap         = False)
+        
+        fraction_non_paddy_over_irrigated_land = vos.readPCRmapClone(v                = self.model_setup["fraction_non_paddy_over_irrigated_land"], \
+                                                                     cloneMapFileName = self.clone, \
+                                                                     tmpDir           = self.tmp_folder, \
+                                                                     absolutePath     = None, \
+                                                                     isLddMap         = False, \
+                                                                     cover            = None, \
+                                                                     isNomMap         = False)
+        # - correcting
+        total_irrigated_land_fraction_before_correction = fraction_paddy_over_irrigated_land + fraction_non_paddy_over_irrigated_land
+        self.irrTypeFracOverIrr["irrPaddy"]    = vos.getValDivZero(fraction_paddy_over_irrigated_land, total_irrigated_land_fraction_before_correction)                                                            
+        self.irrTypeFracOverIrr["irrNonPaddy"] = vos.getValDivZero(fraction_non_paddy_over_irrigated_land, total_irrigated_land_fraction_before_correction)                                                            
+
 
         
 
@@ -122,19 +162,49 @@ class DeterministicRunner(DynamicModel):
         self.irrigationArea = pcr.max(self.irrigationArea, 0.0)              
         self.irrigationArea = pcr.min(self.irrigationArea, self.cell_area)  # limited by cellArea
 
-        # calculate fracVegCover (for irrigation only)
+        # calculate fracVegCover (for irrigation only): for "irrPaddy" and "irrNonPaddy"
         for coverType in self.coverTypes:
             if coverType.startswith('irr'):
 
-                self.landCoverObj[coverType].fractionArea = 0.0    # reset 
-                self.landCoverObj[coverType].fractionArea = self.landCoverObj[coverType].irrTypeFracOverIrr * self.irrigationArea # unit: m2
-                self.landCoverObj[coverType].fracVegCover = pcr.min(1.0, self.landCoverObj[coverType].fractionArea/ self.cellArea) 
+                self.fractionArea[coverType] = 0.0    # reset 
+                self.fractionArea[coverType] = self.irrTypeFracOverIrr[coverType]* self.irrigationArea # unit: m2
+                self.fracVegCover[coverType] = pcr.min(1.0, self.fractionArea[coverType]/ self.cellArea) 
 
                 # avoid small values
-                self.landCoverObj[coverType].fracVegCover = pcr.rounddown(self.landCoverObj[coverType].fracVegCover * 1000.)/1000.
+                self.fracVegCover[coverType] = pcr.rounddown(self.fracVegCover[coverType] * 1000.)/1000.
 
-        # rescale land cover fractions (for all land cover types):
-        self.scaleModifiedLandCoverFractions()
+
+        # TODO: Please check the following!!
+        
+        # rescale land cover fractions (for all land cover types) - this is adopted from the function "scaleModifiedLandCoverFractions()" in the landSurface.py of PCR-GLOBWB
+        # - calculate irrigatedAreaFrac (fraction of irrigation areas) 
+        irrigatedAreaFrac = pcr.spatial(pcr.scalar(0.0))
+        for coverType in self.coverTypes:
+            if coverType.startswith('irr'):
+                irrigatedAreaFrac = irrigatedAreaFrac + self.fracVegCover[coverType]
+
+        totalArea  = pcr.spatial(pcr.scalar(0.0))
+        totalArea += irrigatedAreaFrac
+
+        # correction factor for forest and grassland (pristine Areas)
+        lcFrac = pcr.max(0.0, 1.0 - totalArea)
+        pristineAreaFrac = pcr.spatial(pcr.scalar(0.0))
+
+        for coverType in self.coverTypes:         
+            if not coverType.startswith('irr'):
+                self.fracVegCover[coverType] = 0.0
+                self.fracVegCover[coverType] = self.naturalFracVegCover[coverType] * lcFrac
+                pristineAreaFrac             = pcr.cover(self.fracVegCover[coverType], 0.0)
+
+        # check and make sure that totalArea = 1.0 for all cells
+        totalArea += pristineAreaFrac
+        totalArea = pcr.ifthen(self.landmask,totalArea)
+        totalArea = pcr.cover(totalArea, 1.0)
+        totalArea = pcr.ifthen(self.landmask,totalArea)
+        a,b,c = vos.getMinMaxMean(totalArea - pcr.scalar(1.0))
+        threshold = 1e-4
+        if abs(a) > threshold or abs(b) > threshold:
+            logger.error("fraction total (from all land cover types) is not equal to 1.0 ... Min %f Max %f Mean %f" %(a,b,c)) 
 
 
         irrigationArea
@@ -233,10 +303,17 @@ def main():
     model_setup['topo_nc_file']   = "/projects/0/dfguu/users/edwin/data/pcrglobwb_input_aqueduct/version_2021-09-16/general/topography_parameters_5min_april_2021_global_covered_with_zero.nc"
     
     model_setup["irrigationArea"] = "irrigated_areas_historical_1960-2019.nc" 
+    
+    # fractions of natural land covers (forest and grassland)
+    model_setup["fraction_forest"]    = "general/vegf_tall.map" 
+    model_setup["fraction_grassland"] = "general/vegf_short.map" 
 
--rw-r--r--. 1 edwin edwin 1.8G Apr  1  2022 irrigated_areas_ssp1_2000-2050.nc
--rw-r--r--. 1 edwin edwin 1.8G Apr  1  2022 irrigated_areas_ssp3_2000-2050.nc
--rw-r--r--. 1 edwin edwin 1.8G Apr  1  2022 irrigated_areas_ssp5_2000-2050.nc
+
+    # fractions of paddy and non paddy over irrigated areas
+    model_setup["fraction_paddy_over_irrigated_land"]     = "general/fractionPaddy_extrapolated.map" 
+    model_setup["fraction_non_paddy_over_irrigated_land"] = "general/fractionNonPaddy_extrapolated.map" 
+    
+
 
 
 
