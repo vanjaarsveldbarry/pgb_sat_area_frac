@@ -331,13 +331,13 @@ def main():
     model_setup["monthly_s1_file"] = "/projects/0/managed_datasets/hypflowsci6_v1.0/output/gswp3-w5e5/historical-reference/pcrglobwb_cmip6-isimip3-gswp3-w5e5_image-aqueduct_historical-reference_storUppTotal_global_monthly-average_1960_2019_basetier1.nc"
     model_setup["monthly_s2_file"] = "/projects/0/managed_datasets/hypflowsci6_v1.0/output/gswp3-w5e5/historical-reference/pcrglobwb_cmip6-isimip3-gswp3-w5e5_image-aqueduct_historical-reference_storLowTotal_global_monthly-average_1960_2019_basetier1.nc"
     
-    model_setup["minSoilDepthFrac_forest"]      = "/projects/0/dfguu/users/edwin/data/pcrglobwb_input_aqueduct/version_2021-09-16/general/general/minf_tall.map"
-    model_setup["minSoilDepthFrac_grassland"]   = "/projects/0/dfguu/users/edwin/data/pcrglobwb_input_aqueduct/version_2021-09-16/general/general/minf_short.map"
+    model_setup["minSoilDepthFrac_forest"]      = "/projects/0/dfguu/users/edwin/data/pcrglobwb_input_aqueduct/version_2021-09-16/general/minf_tall.map"
+    model_setup["minSoilDepthFrac_grassland"]   = "/projects/0/dfguu/users/edwin/data/pcrglobwb_input_aqueduct/version_2021-09-16/general/minf_short.map"
     model_setup["minSoilDepthFrac_irrPaddy"]    = 0.99
     model_setup["minSoilDepthFrac_irrNonPaddy"] = 0.99
     
-    model_setup["maxSoilDepthFrac_forest"]      = "/projects/0/dfguu/users/edwin/data/pcrglobwb_input_aqueduct/version_2021-09-16/general/general/maxf_tall.map"
-    model_setup["maxSoilDepthFrac_grassland"]   = "/projects/0/dfguu/users/edwin/data/pcrglobwb_input_aqueduct/version_2021-09-16/general/general/maxf_short.map"
+    model_setup["maxSoilDepthFrac_forest"]      = "/projects/0/dfguu/users/edwin/data/pcrglobwb_input_aqueduct/version_2021-09-16/general/maxf_tall.map"
+    model_setup["maxSoilDepthFrac_grassland"]   = "/projects/0/dfguu/users/edwin/data/pcrglobwb_input_aqueduct/version_2021-09-16/general/maxf_short.map"
     model_setup["maxSoilDepthFrac_irrPaddy"]    = 1.01
     model_setup["maxSoilDepthFrac_irrNonPaddy"] = 1.01
     
