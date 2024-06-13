@@ -190,6 +190,7 @@ class DeterministicRunner(DynamicModel):
 		    
             # calculate fracVegCover (for irrigation only): for "irrPaddy" and "irrNonPaddy"
             self.fractionArea = {}
+            self.fracVegCover = {}
             for coverType in self.coverTypes:
                 if coverType.startswith('irr'):
 		    
