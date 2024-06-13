@@ -266,7 +266,7 @@ class DeterministicRunner(DynamicModel):
             # arnoBeta
             self.arnoBeta = pcr.max(0.001,\
                      (maxSoilDepthFrac_avg-1.)/(1.-minSoilDepthFrac_avg)+\
-                                               orographyBeta-0.01)                # Rens's line: BCF[TYPE]= max(0.001,(MAXFRAC[TYPE]-1)/(1-MINFRAC[TYPE])+B_ORO-0.01)
+                                               self.orographyBeta-0.01)
 		    
             # WMIN (unit: m): minimum local soil water capacity within the grid-cell
             self.rootZoneWaterStorageMin = minSoilDepthFrac_avg * self.rootZoneWaterStorageCap
