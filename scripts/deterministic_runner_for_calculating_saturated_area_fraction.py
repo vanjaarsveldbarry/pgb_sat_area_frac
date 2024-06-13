@@ -333,13 +333,13 @@ def main():
     
     model_setup["minSoilDepthFrac_forest"]      = "/projects/0/dfguu/users/edwin/data/pcrglobwb_input_aqueduct/version_2021-09-16/general/minf_tall.map"
     model_setup["minSoilDepthFrac_grassland"]   = "/projects/0/dfguu/users/edwin/data/pcrglobwb_input_aqueduct/version_2021-09-16/general/minf_short.map"
-    model_setup["minSoilDepthFrac_irrPaddy"]    = 0.99
-    model_setup["minSoilDepthFrac_irrNonPaddy"] = 0.99
+    model_setup["minSoilDepthFrac_irrPaddy"]    = "0.99"
+    model_setup["minSoilDepthFrac_irrNonPaddy"] = "0.99"
     
     model_setup["maxSoilDepthFrac_forest"]      = "/projects/0/dfguu/users/edwin/data/pcrglobwb_input_aqueduct/version_2021-09-16/general/maxf_tall.map"
     model_setup["maxSoilDepthFrac_grassland"]   = "/projects/0/dfguu/users/edwin/data/pcrglobwb_input_aqueduct/version_2021-09-16/general/maxf_short.map"
-    model_setup["maxSoilDepthFrac_irrPaddy"]    = 1.01
-    model_setup["maxSoilDepthFrac_irrNonPaddy"] = 1.01
+    model_setup["maxSoilDepthFrac_irrPaddy"]    = "1.01"
+    model_setup["maxSoilDepthFrac_irrNonPaddy"] = "1.01"
     
     model_setup["start_date"] = "1960-01-31"
     model_setup["end_date"]   = "2019-12-31"
