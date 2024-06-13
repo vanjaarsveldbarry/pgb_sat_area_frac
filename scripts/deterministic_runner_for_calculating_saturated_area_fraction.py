@@ -63,9 +63,9 @@ class DeterministicRunner(DynamicModel):
         
         # initiate a netcdf writer
         self.netcdf_report = netcdf_writer.PCR2netCDF(self.model_setup["clone_file"])
-        self.netcdf_report.createNetCDF(self.model_setup["discharge_output_file"],\
-                                        "discharge",\
-                                        "m3/s")
+        self.netcdf_report.createNetCDF(self.model_setup["saturated_area_fraction_output_file"],\
+                                        "satAreaFrac",\
+                                        "-")
         
     def initial(self): 
         
