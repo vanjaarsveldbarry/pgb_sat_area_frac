@@ -29,12 +29,11 @@ class DeterministicRunner(DynamicModel):
         # initiate model time
         self.modelTime = modelTime        
 
-
         # get the model setup
         self.model_setup = model_setup
         
         # set clone
-        saturated_area_fraction_output_file = self.model_setup["clone_file"]
+        self.clone = self.model_setup["clone_file"]
         pcr.setclone(self.clone)
         
         # output and tmp folders
