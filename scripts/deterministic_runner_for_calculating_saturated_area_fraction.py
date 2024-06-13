@@ -199,7 +199,7 @@ class DeterministicRunner(DynamicModel):
                     self.fractionArea[coverType] = self.irrTypeFracOverIrr[coverType]* self.irrigationArea # unit: m2
                     
                     # fraction of this irrigated area over the entire cell
-                    self.fracVegCover[coverType] = pcr.min(1.0, self.fractionArea[coverType]/ self.cellArea) 
+                    self.fracVegCover[coverType] = pcr.min(1.0, self.fractionArea[coverType] / self.cell_area) 
 		    
                     # avoid small values
                     self.fracVegCover[coverType] = pcr.rounddown(self.fracVegCover[coverType] * 1000.)/1000.
