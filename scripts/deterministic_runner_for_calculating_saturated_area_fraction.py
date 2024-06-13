@@ -75,7 +75,7 @@ class DeterministicRunner(DynamicModel):
                           'satVolWC2']
         for var in soilParameters:
             soil_input_file = self.model_setup[var]
-            vars(self)[var] = vos.readPCRmapClone(soil_input_file, self.clone, self.tmp_folder, self.inputDir)
+            vars(self)[var] = vos.readPCRmapClone(soil_input_file, self.clone, self.tmp_folder)
             vars(self)[var] = pcr.scalar(vars(self)[var])
         
 
