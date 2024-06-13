@@ -175,7 +175,7 @@ class DeterministicRunner(DynamicModel):
         if self.modelTime.isFirstDayOfMonth() or self.modelTime.isFirstTimestep():
 
             # read the area/extent of irrigated lands
-            self.dynamicIrrigationAreaFile = self.model_setup[" "]
+            self.dynamicIrrigationAreaFile = self.model_setup["irrigationArea"]
             if self.dynamicIrrigationAreaFile.endswith(('.nc4','.nc')):
                 fulldateInString = yearInString+"-01"+"-01"   
                 self.irrigationArea = 10000. * pcr.cover(\
