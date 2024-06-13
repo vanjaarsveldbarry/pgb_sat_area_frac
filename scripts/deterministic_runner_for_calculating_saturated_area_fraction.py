@@ -281,12 +281,12 @@ class DeterministicRunner(DynamicModel):
 
             # read monthly S1 and S2 (m)
             monthly_storUpp    = vos.netcdf2PCRobjClone(self.model_setup["monthly_s1_file"], \
-                                                                   "total_runoff", \
+                                                                   "upper_soil_storage", \
                                                                    str(self.modelTime.fulldate), \
                                                                    None, \
                                                                    self.clone)
             monthly_storLow    = vos.netcdf2PCRobjClone(self.model_setup["monthly_s2_file"], \
-                                                                   "total_runoff", \
+                                                                   "lower_soil_storage", \
                                                                    str(self.modelTime.fulldate), \
                                                                    None, \
                                                                    self.clone)
