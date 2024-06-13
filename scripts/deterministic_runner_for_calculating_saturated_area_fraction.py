@@ -317,16 +317,16 @@ def main():
 
     model_setup['topo_nc_file']   = "/projects/0/dfguu/users/edwin/data/pcrglobwb_input_aqueduct/version_2021-09-16/general/topography_parameters_5min_april_2021_global_covered_with_zero.nc"
     
-    model_setup["irrigationArea"] = "irrigated_areas_historical_1960-2019.nc" 
+    model_setup["irrigationArea"] = "/projects/0/dfguu/users/edwin/data/pcrglobwb_input_aqueduct/version_2021-09-16/historical_and_ssp_files/irrigated_areas_historical_1960-2019.nc" 
     
     # fractions of natural land covers (forest and grassland)
-    model_setup["fraction_forest"]    = "general/vegf_tall.map" 
-    model_setup["fraction_grassland"] = "general/vegf_short.map" 
+    model_setup["fraction_forest"]    = "/projects/0/dfguu/users/edwin/data/pcrglobwb_input_aqueduct/version_2021-09-16/general/vegf_tall.map" 
+    model_setup["fraction_grassland"] = "/projects/0/dfguu/users/edwin/data/pcrglobwb_input_aqueduct/version_2021-09-16/general/vegf_short.map" 
 
 
     # fractions of paddy and non paddy over irrigated areas
-    model_setup["fraction_paddy_over_irrigated_land"]     = "general/fractionPaddy_extrapolated.map" 
-    model_setup["fraction_non_paddy_over_irrigated_land"] = "general/fractionNonPaddy_extrapolated.map" 
+    model_setup["fraction_paddy_over_irrigated_land"]     = "/projects/0/dfguu/users/edwin/data/pcrglobwb_input_aqueduct/version_2021-09-16/general/fractionPaddy_extrapolated.map" 
+    model_setup["fraction_non_paddy_over_irrigated_land"] = "/projects/0/dfguu/users/edwin/data/pcrglobwb_input_aqueduct/version_2021-09-16/general/fractionNonPaddy_extrapolated.map" 
     
     model_setup["monthly_s1_file"] = "/projects/0/managed_datasets/hypflowsci6_v1.0/output/gswp3-w5e5/historical-reference/pcrglobwb_cmip6-isimip3-gswp3-w5e5_image-aqueduct_historical-reference_storUppTotal_global_monthly-average_1960_2019_basetier1.nc"
     model_setup["monthly_s2_file"] = "/projects/0/managed_datasets/hypflowsci6_v1.0/output/gswp3-w5e5/historical-reference/pcrglobwb_cmip6-isimip3-gswp3-w5e5_image-aqueduct_historical-reference_storLowTotal_global_monthly-average_1960_2019_basetier1.nc"
