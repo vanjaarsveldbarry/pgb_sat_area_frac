@@ -12,7 +12,7 @@ import netCDF4 as nc
 import numpy as np
 import pcraster as pcr
 
-from . import virtualOS as vos
+import virtualOS as vos
 
 # TODO: Shall we define the dictionary (e.g. filecache = dict()) to avoid opening and closing files?
 
