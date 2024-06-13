@@ -177,7 +177,7 @@ class DeterministicRunner(DynamicModel):
             # read the area/extent of irrigated lands
             self.dynamicIrrigationAreaFile = self.model_setup["irrigationArea"]
             if self.dynamicIrrigationAreaFile.endswith(('.nc4','.nc')):
-                fulldateInString = yearInString+"-01"+"-01"   
+                fulldateInString = str(self.modelTime.year) + "-01"+"-01"   
                 self.irrigationArea = 10000. * pcr.cover(\
                      vos.netcdf2PCRobjClone(self.dynamicIrrigationAreaFile,\
                                                 'irrigationArea',\
