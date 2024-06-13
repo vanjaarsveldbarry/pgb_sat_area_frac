@@ -90,8 +90,8 @@ class DeterministicRunner(DynamicModel):
         self.rootZoneWaterStorageCap = self.storCapUpp + self.storCapLow                      # This is called as WMAX in the original pcrcalc script. 
 
         # orographyBeta
-        self.orographyBeta = vos.netcdf2PCRobjCloneWithoutTime(ncFile  = self.model_setup['topo_nc_file'],\ 
-                                                               varName = "orographyBeta",\ 
+        self.orographyBeta = vos.netcdf2PCRobjCloneWithoutTime(ncFile  = self.model_setup['topo_nc_file'],\
+                                                               varName = "orographyBeta",\
                                                                cloneMapFileName  = self.cloneMap,\
                                                                LatitudeLongitude = True,\
                                                                specificFillValue = None,\
