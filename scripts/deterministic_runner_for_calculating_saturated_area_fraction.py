@@ -34,7 +34,7 @@ class DeterministicRunner(DynamicModel):
         self.model_setup = model_setup
         
         # set clone
-        self.clone = self.model_setup["clone_file"]
+        saturated_area_fraction_output_file = self.model_setup["clone_file"]
         pcr.setclone(self.clone)
         
         # output and tmp folders
@@ -76,7 +76,7 @@ class DeterministicRunner(DynamicModel):
                           'satVolWC2']
         for var in soilParameters:
             soil_input_file = self.model_setup[var]
-            vars(self)[var] = vos.readPCRmapClone(soil_input_file, self.cloneMap, self.tmpDir, self.inputDir)
+            vars(self)[var] = vos.readPCRmapClone(soil_input_file, self.clone, self.tmpDir, self.inputDir)
             vars(self)[var] = pcr.scalar(vars(self)[var])
         
 
@@ -92,7 +92,7 @@ class DeterministicRunner(DynamicModel):
         # orographyBeta
         self.orographyBeta = vos.netcdf2PCRobjCloneWithoutTime(ncFile  = self.model_setup['topo_nc_file'],\
                                                                varName = "orographyBeta",\
-                                                               cloneMapFileName  = self.cloneMap,\
+                                                               cloneMapFileName  = self.clone,\
                                                                LatitudeLongitude = True,\
                                                                specificFillValue = None,\
                                                                absolutePath = None)
@@ -183,7 +183,7 @@ class DeterministicRunner(DynamicModel):
                      vos.netcdf2PCRobjClone(self.dynamicIrrigationAreaFile,\
                                                 'irrigationArea',\
                          fulldateInString, useDoy = 'yearly',\
-                                 cloneMapFileName = self.cloneMap), 0.0)        # unit: m2 (input file is in hectare)
+                                 cloneMapFileName = self.clone), 0.0)        # unit: m2 (input file is in hectare)
             
             # area of irrigation is limited by cellArea
             self.irrigationArea = pcr.max(self.irrigationArea, 0.0)              
