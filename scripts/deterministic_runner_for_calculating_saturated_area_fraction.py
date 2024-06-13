@@ -172,6 +172,8 @@ class DeterministicRunner(DynamicModel):
 
     def dynamic(self):
 
+        coverTypes = ["forest", "grassland", "irrPaddy", "irrNonPaddy"]
+        
         # re-calculate current model time using current pcraster timestep value
         self.modelTime.update(self.currentTimeStep())
 
