@@ -70,7 +70,7 @@ class DeterministicRunner(DynamicModel):
     def initial(self): 
         
         # read soil parameters from the netCDF file:
-        soilParameters = ['resVolWC1',\           
+        soilParameters = ['resVolWC1',\
                           'resVolWC2',\
                           'satVolWC1',\
                           'satVolWC2']
