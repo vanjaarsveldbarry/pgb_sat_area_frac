@@ -244,6 +244,9 @@ class DeterministicRunner(DynamicModel):
 
 
             # read land cover parameters
+            land_cover_fraction = {}
+            minSoilDepthFrac    = {}
+            maxSoilDepthFrac    = {}
             for coverType in coverTypes:
                 
                 # read land cover fractions
