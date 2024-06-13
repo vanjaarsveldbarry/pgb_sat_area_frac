@@ -189,6 +189,7 @@ class DeterministicRunner(DynamicModel):
             self.irrigationArea = pcr.min(self.irrigationArea, self.cell_area)  # limited by cellArea
 		    
             # calculate fracVegCover (for irrigation only): for "irrPaddy" and "irrNonPaddy"
+            self.fractionArea = {}
             for coverType in self.coverTypes:
                 if coverType.startswith('irr'):
 		    
