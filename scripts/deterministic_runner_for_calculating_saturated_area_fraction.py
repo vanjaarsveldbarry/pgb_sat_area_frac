@@ -50,6 +50,9 @@ class DeterministicRunner(DynamicModel):
                                        isNomMap         = False)
         self.ldd = pcr.lddrepair(pcr.lddrepair(pcr.ldd(self.ldd)))                               
 
+        # set the landmask based on the extent of ldd
+        self.landmask = pcr.ifthen(pcr.defined(self.ldd), pcr.boolean(1.0))
+
         # read cell area (m2)
         self.cell_area = vos.readPCRmapClone(v                = self.model_setup["cell_area_file"], \
                                              cloneMapFileName = self.clone, \
@@ -60,6 +63,7 @@ class DeterministicRunner(DynamicModel):
                                              isNomMap         = False)
 
         
+
         # initiate a netcdf writer
         self.netcdf_report = netcdf_writer.PCR2netCDF(self.model_setup["clone_file"])
         self.netcdf_report.createNetCDF(self.model_setup["saturated_area_fraction_output_file"],\
