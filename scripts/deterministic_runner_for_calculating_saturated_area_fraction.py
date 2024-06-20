@@ -292,11 +292,12 @@ class DeterministicRunner(DynamicModel):
                                                                    self.clone)
             monthly_total_soil_storage = monthly_storUpp + monthly_storLow
             
-            
+
             # calculate saturated area fraction
             saturated_area_fraction = 1.00 - \
              ((self.rootZoneWaterStorageCap - monthly_total_soil_storage) / (self.rootZoneWaterStorageCap - self.rootZoneWaterStorageMin))**(self.arnoBeta/(self.arnoBeta+1))
-            
+            # - set the minimum to zero
+            saturated_area_fraction = pcr.max(0.0, saturated_area_fraction)
             
             # reporting 
             # - time stamp for reporting
