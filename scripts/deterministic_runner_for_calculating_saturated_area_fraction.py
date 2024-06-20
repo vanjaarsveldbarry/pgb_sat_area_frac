@@ -200,7 +200,7 @@ class DeterministicRunner(DynamicModel):
             for coverType in self.coverTypes:
                 if coverType.startswith('irr'):
 		    
-                    self.fractionArea[coverType] = 0.0    # reset 
+                    self.fractionArea[coverType] = 0.0    # reset (trial)
                     
                     # irrigated area for every land cover type (unit: m2)
                     self.fractionArea[coverType] = self.irrTypeFracOverIrr[coverType]* self.irrigationArea # unit: m2
