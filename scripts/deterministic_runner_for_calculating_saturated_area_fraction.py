@@ -356,7 +356,7 @@ def main():
     model_setup["start_date"] = "1960-01-31"
     model_setup["end_date"]   = "2019-12-31"
 
-    model_setup["output_dir"] = "/scratch-shared/edwin/test_sat_area_frac/test/"
+    model_setup["output_dir"] = "/scratch-shared/otoo0001/test_sat_area_frac/test/"
 
     model_setup["saturated_area_fraction_output_file"] = model_setup["output_dir"] + "/" + "estimateSatAreaFrac_monthAvg_" + model_setup["start_date"] + "_to_" + model_setup["end_date"] + ".nc"
 
