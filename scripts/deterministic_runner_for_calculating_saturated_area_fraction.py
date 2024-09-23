@@ -293,11 +293,19 @@ class DeterministicRunner(DynamicModel):
             monthly_total_soil_storage = monthly_storUpp + monthly_storLow
             
 
+            # # calculate saturated area fraction
+            # saturated_area_fraction = 1.00 - \
+            #  ((self.rootZoneWaterStorageCap - monthly_total_soil_storage) / (self.rootZoneWaterStorageCap - self.rootZoneWaterStorageMin))**(self.arnoBeta/(self.arnoBeta+1))
+            # # - set the minimum to zero
+            # saturated_area_fraction = pcr.max(0.0, saturated_area_fraction)
+
             # calculate saturated area fraction
-            saturated_area_fraction = 1.00 - \
-             ((self.rootZoneWaterStorageCap - monthly_total_soil_storage) / (self.rootZoneWaterStorageCap - self.rootZoneWaterStorageMin))**(self.arnoBeta/(self.arnoBeta+1))
-            # - set the minimum to zero
-            saturated_area_fraction = pcr.max(0.0, saturated_area_fraction)
+            # New formula for saturated area fraction
+            # New formula for saturated area fraction using max function
+            saturated_area_fraction = pcr.max((monthly_storUpp + monthly_storLow) / (self.storCapUpp + self.storCapLow))
+
+
+
             
             # reporting 
             # - time stamp for reporting
@@ -394,3 +402,4 @@ def main():
         
 if __name__ == '__main__':
     sys.exit(main())
+
